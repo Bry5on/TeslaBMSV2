@@ -85,7 +85,8 @@ void SerialConsole::printMenu() {
  */
 void SerialConsole::serialEvent() {
     int incoming;
-    incoming = SERIALCONSOLE.read();
+    if (Serial.available() > 0) incoming = SERIALCONSOLE.read();
+    if (HWSERIAL.available() > 0) incoming = HWSERIAL.read();
     if (incoming == -1) { //false alarm....
         return;
     }
@@ -232,6 +233,3 @@ void SerialConsole::handleShortCmd()
         }
     }     
  */
-
-
-
