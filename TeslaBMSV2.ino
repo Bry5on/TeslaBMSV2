@@ -1032,8 +1032,8 @@ void printbmsstat()
   }
   if (balancecells == 1)
   {
-    SERIALCONSOLE.print("|Balancing Active");
-    HWSERIAL.print("|Balancing Active");
+    SERIALCONSOLE.print("| Balancing Active");
+    HWSERIAL.print("| Balancing Active");
   }
   SERIALCONSOLE.print("  ");
   SERIALCONSOLE.print(cellspresent);
@@ -1107,12 +1107,12 @@ void printbmsstat()
 
   SERIALCONSOLE.print(" Charge Current Limit : ");
   SERIALCONSOLE.print(chargecurrent*0.1,0);
-  SERIALCONSOLE.print(" A DisCharge Current Limit : ");
+  SERIALCONSOLE.print(" A | DisCharge Current Limit : ");
   SERIALCONSOLE.print(discurrent*0.1,0);
   SERIALCONSOLE.print(" A");
   HWSERIAL.print(" Charge Current Limit : ");
   HWSERIAL.print(chargecurrent*0.1,0);
-  HWSERIAL.print(" A DisCharge Current Limit : ");
+  HWSERIAL.print(" A | DisCharge Current Limit : ");
   HWSERIAL.print(discurrent*0.1,0);
   HWSERIAL.print(" A");
 
@@ -1120,13 +1120,13 @@ void printbmsstat()
   {
     if (chargecurrentlimit == false)
     {
-      SERIALCONSOLE.print("  No Charge Current Limit");
-      HWSERIAL.print("  No Charge Current Limit");
+      SERIALCONSOLE.print(" | Charge Current Limit Inactive");
+      HWSERIAL.print(" | Charge Current Limit Inactive");
     }
     else
     {
-      SERIALCONSOLE.print("  Charge Current Limit Active");
-      HWSERIAL.print("  Charge Current Limit Active");
+      SERIALCONSOLE.print(" | Charge Current Limit Active");
+      HWSERIAL.print(" | Charge Current Limit Active");
     }
   }
 
