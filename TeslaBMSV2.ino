@@ -1044,8 +1044,6 @@ void printbmsstat()
   SERIALCONSOLE.print(digitalRead(OUT3));
   SERIALCONSOLE.print(digitalRead(OUT4));
   SERIALCONSOLE.print(" Cont:");
-  HWSERIAL.print("  ");
-  HWSERIAL.print(cellspresent);
   HWSERIAL.println();
   HWSERIAL.print("Out:");
   HWSERIAL.print(digitalRead(OUT1));
@@ -1103,6 +1101,7 @@ void printbmsstat()
   HWSERIAL.print(digitalRead(IN2));
   HWSERIAL.print(digitalRead(IN3));
   HWSERIAL.print(digitalRead(IN4));
+  HWSERIAL.println();
 
 
   SERIALCONSOLE.print(" Charge Current Limit : ");
@@ -1110,23 +1109,24 @@ void printbmsstat()
   SERIALCONSOLE.print(" A | DisCharge Current Limit : ");
   SERIALCONSOLE.print(discurrent*0.1,0);
   SERIALCONSOLE.print(" A");
-  HWSERIAL.print(" Charge Current Limit : ");
+  HWSERIAL.print("Charge Current Limit : ");
   HWSERIAL.print(chargecurrent*0.1,0);
-  HWSERIAL.print(" A | DisCharge Current Limit : ");
+  HWSERIAL.println(" A");
+  HWSERIAL.print("DisCharge Current Limit : ");
   HWSERIAL.print(discurrent*0.1,0);
-  HWSERIAL.print(" A");
+  HWSERIAL.println(" A");
 
   if (bmsstatus == Charge)
   {
     if (chargecurrentlimit == false)
     {
       SERIALCONSOLE.print(" | Charge Current Limit Inactive");
-      HWSERIAL.print(" | Charge Current Limit Inactive");
+      HWSERIAL.println("Charge Current Limit Inactive");
     }
     else
     {
       SERIALCONSOLE.print(" | Charge Current Limit Active");
-      HWSERIAL.print(" | Charge Current Limit Active");
+      HWSERIAL.println("Charge Current Limit Active");
     }
   }
 
@@ -1439,8 +1439,7 @@ void updateSOC()
     SERIALCONSOLE.println ("mAh");
     HWSERIAL.print("  ");
     HWSERIAL.print(currentact);
-    HWSERIAL.print("mA");
-    HWSERIAL.print("  ");
+    HWSERIAL.println("mA");
     HWSERIAL.print(SOC);
     HWSERIAL.print("% SOC ");
     HWSERIAL.print(ampsecond * 0.27777777777778, 2);
