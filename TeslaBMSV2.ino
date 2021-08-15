@@ -127,7 +127,7 @@ unsigned char len = 0;
 byte rxBuf[8];
 char msgString[128];                        // Array to store serial string
 uint32_t inbox;
-signed long CANmilliamps;//mV
+signed long CANmilliamps;//mA
 signed long voltage1, voltage2, voltage3 = 0; //mV only with ISAscale sensor
 //struct can_frame canMsg;
 //MCP2515 CAN1(10); //set CS pin for can controlelr
@@ -302,11 +302,11 @@ void setup()
   //if using enable pins on a transceiver they need to be set on
 
 
-  adc->setAveraging(16); // set number of averages
-  adc->setResolution(16); // set bits of resolution
-  adc->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED);
-  adc->setSamplingSpeed(ADC_SAMPLING_SPEED::LOW_SPEED);
-  adc->startContinuous(ACUR1, ADC_0);
+  adc->adc0->setAveraging(16); // set number of averages
+  adc->adc0->setResolution(16); // set bits of resolution
+  adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED);
+  adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::LOW_SPEED);
+  adc->adc0->startContinuous(ACUR1);
 
 
   SERIALCONSOLE.begin(115200);
@@ -1109,12 +1109,12 @@ void printbmsstat()
   SERIALCONSOLE.print(" A | DisCharge Current Limit : ");
   SERIALCONSOLE.print(discurrent*0.1,0);
   SERIALCONSOLE.print(" A");
-  HWSERIAL.print("Charge Current Limit : ");
-  HWSERIAL.print(chargecurrent*0.1,0);
-  HWSERIAL.println(" A");
-  HWSERIAL.print("DisCharge Current Limit : ");
-  HWSERIAL.print(discurrent*0.1,0);
-  HWSERIAL.println(" A");
+  //HWSERIAL.print("Charge Current Limit : ");
+  //HWSERIAL.print(chargecurrent*0.1,0);
+  //HWSERIAL.println(" A");
+  //HWSERIAL.print("DisCharge Current Limit : ");
+  //HWSERIAL.print(discurrent*0.1,0);
+  //HWSERIAL.println(" A");
 
   if (bmsstatus == Charge)
   {
@@ -1142,18 +1142,18 @@ void getcurrent()
       if (currentact < settings.changecur && currentact > (settings.changecur * -1))
       {
         sensor = 1;
-        adc->startContinuous(ACUR1, ADC_0);
+        adc->adc0->startContinuous(ACUR1);
       }
       else
       {
         sensor = 2;
-        adc->startContinuous(ACUR2, ADC_0);
+        adc->adc0->startContinuous(ACUR2);
       }
     }
     else
     {
       sensor = 1;
-      adc->startContinuous(ACUR1, ADC_0);
+      adc->adc0->startContinuous(ACUR1);
     }
     if (sensor == 1)
     {
@@ -1174,32 +1174,32 @@ void getcurrent()
         SERIALCONSOLE.print("Value ADC0: ");
         HWSERIAL.print("Value ADC0: ");
       }
-      value = (uint16_t)adc->analogReadContinuous(ADC_0); // the unsigned is necessary for 16 bits, otherwise values larger than 3.3/2 V are negative!
+      value = (uint16_t)adc->adc0->analogReadContinuous(); // the unsigned is necessary for 16 bits, otherwise values larger than 3.3/2 V are negative!
       if (debugCur != 0)
       {
-        SERIALCONSOLE.print(value * 3300 / adc->getMaxValue(ADC_0)); //- settings.offset1)
+        SERIALCONSOLE.print(value * 3300 / adc->adc0->getMaxValue()); //- settings.offset1)
         SERIALCONSOLE.print(" ");
         SERIALCONSOLE.print(settings.offset1);
-        HWSERIAL.print(value * 3300 / adc->getMaxValue(ADC_0)); //- settings.offset1)
+        HWSERIAL.print(value * 3300 / adc->adc0->getMaxValue()); //- settings.offset1)
         HWSERIAL.print(" ");
         HWSERIAL.print(settings.offset1);
       }
-      RawCur = int16_t((value * 3300 / adc->getMaxValue(ADC_0)) - settings.offset1) / (settings.convlow * 0.00001);
+      RawCur = int16_t((value * 3300 / adc->adc0->getMaxValue()) - settings.offset1) / (settings.convlow * 0.00001);
 
-      if (abs((int16_t(value * 3300 / adc->getMaxValue(ADC_0)) - settings.offset1)) <  settings.CurDead)
+      if (abs((int16_t(value * 3300 / adc->adc0->getMaxValue()) - settings.offset1)) <  settings.CurDead)
       {
         RawCur = 0;
       }
       if (debugCur != 0)
       {
         SERIALCONSOLE.print("  ");
-        SERIALCONSOLE.print(int16_t(value * 3300 / adc->getMaxValue(ADC_0)) - settings.offset1);
+        SERIALCONSOLE.print(int16_t(value * 3300 / adc->adc0->getMaxValue()) - settings.offset1);
         SERIALCONSOLE.print("  ");
         SERIALCONSOLE.print(RawCur);
         SERIALCONSOLE.print(" mA");
         SERIALCONSOLE.print("  ");
         HWSERIAL.print("  ");
-        HWSERIAL.print(int16_t(value * 3300 / adc->getMaxValue(ADC_0)) - settings.offset1);
+        HWSERIAL.print(int16_t(value * 3300 / adc->adc0->getMaxValue()) - settings.offset1);
         HWSERIAL.print("  ");
         HWSERIAL.print(RawCur);
         HWSERIAL.print(" mA");
@@ -1217,31 +1217,31 @@ void getcurrent()
         HWSERIAL.print("High Range: ");
         HWSERIAL.print("Value ADC0: ");
       }
-      value = (uint16_t)adc->analogReadContinuous(ADC_0); // the unsigned is necessary for 16 bits, otherwise values larger than 3.3/2 V are negative!
+      value = (uint16_t)adc->adc0->analogReadContinuous(); // the unsigned is necessary for 16 bits, otherwise values larger than 3.3/2 V are negative!
       if (debugCur != 0)
       {
-        SERIALCONSOLE.print(value * 3300 / adc->getMaxValue(ADC_0) );//- settings.offset2)
+        SERIALCONSOLE.print(value * 3300 / adc->adc0->getMaxValue() );//- settings.offset2)
         SERIALCONSOLE.print("  ");
         SERIALCONSOLE.print(settings.offset2);
-        HWSERIAL.print(value * 3300 / adc->getMaxValue(ADC_0) );//- settings.offset2)
+        HWSERIAL.print(value * 3300 / adc->adc0->getMaxValue() );//- settings.offset2)
         HWSERIAL.print("  ");
         HWSERIAL.print(settings.offset2);
       }
-      RawCur = int16_t((value * 3300 / adc->getMaxValue(ADC_0)) - settings.offset2) / (settings.convhigh * 0.00001);
-      if (value < 100 || value > (adc->getMaxValue(ADC_0) - 100))
+      RawCur = int16_t((value * 3300 / adc->adc0->getMaxValue()) - settings.offset2) / (settings.convhigh * 0.00001);
+      if (value < 100 || value > (adc->adc0->getMaxValue() - 100))
       {
         RawCur = 0;
       }
       if (debugCur != 0)
       {
         SERIALCONSOLE.print("  ");
-        SERIALCONSOLE.print((float(value * 3300 / adc->getMaxValue(ADC_0)) - settings.offset2));
+        SERIALCONSOLE.print((float(value * 3300 / adc->adc0->getMaxValue()) - settings.offset2));
         SERIALCONSOLE.print("  ");
         SERIALCONSOLE.print(RawCur);
         SERIALCONSOLE.print("mA");
         SERIALCONSOLE.print("  ");
         HWSERIAL.print("  ");
-        HWSERIAL.print((float(value * 3300 / adc->getMaxValue(ADC_0)) - settings.offset2));
+        HWSERIAL.print((float(value * 3300 / adc->adc0->getMaxValue()) - settings.offset2));
         HWSERIAL.print("  ");
         HWSERIAL.print(RawCur);
         HWSERIAL.print("mA");
@@ -1606,14 +1606,14 @@ void contcon()
 
 void calcur()
 {
-  adc->startContinuous(ACUR1, ADC_0);
+  adc->adc0->startContinuous(ACUR1);
   sensor = 1;
   x = 0;
   SERIALCONSOLE.print(" Calibrating Current Offset ::::: ");
   HWSERIAL.print(" Calibrating Current Offset ::::: ");
   while (x < 20)
   {
-    settings.offset1 = settings.offset1 + ((uint16_t)adc->analogReadContinuous(ADC_0) * 3300 / adc->getMaxValue(ADC_0));
+    settings.offset1 = settings.offset1 + ((uint16_t)adc->adc0->analogReadContinuous() * 3300 / adc->adc0->getMaxValue());
     SERIALCONSOLE.print(".");
     HWSERIAL.print(".");
     delay(100);
@@ -1627,13 +1627,13 @@ void calcur()
   HWSERIAL.print(" current offset 1 calibrated ");
   HWSERIAL.println("  ");
   x = 0;
-  adc->startContinuous(ACUR2, ADC_0);
+  adc->adc0->startContinuous(ACUR2);
   sensor = 2;
   SERIALCONSOLE.print(" Calibrating Current Offset ::::: ");
   HWSERIAL.print(" Calibrating Current Offset ::::: ");
   while (x < 20)
   {
-    settings.offset2 = settings.offset2 + ((uint16_t)adc->analogReadContinuous(ADC_0) * 3300 / adc->getMaxValue(ADC_0));
+    settings.offset2 = settings.offset2 + ((uint16_t)adc->adc0->analogReadContinuous() * 3300 / adc->adc0->getMaxValue());
     SERIALCONSOLE.print(".");
     HWSERIAL.print(".");
     delay(100);
@@ -3560,12 +3560,20 @@ void canread()
         break;
     }
   }
-  else if (settings.curcan == 2)
+  else if (settings.curcan == 2) //ISA shunt
   {
     switch (inMsg.id)
     {
       case 0x521: //
-        CANmilliamps = rxBuf[5] + (rxBuf[4] << 8) + (rxBuf[3] << 16) + (rxBuf[2] << 24);
+        //CANmilliamps = rxBuf[5] + (rxBuf[4] << 8) + (rxBuf[3] << 16) + (rxBuf[2] << 24);
+        CANmilliamps = ((rxBuf[5] << 24) + (rxBuf[4] << 16) + (rxBuf[3] << 8) + (rxBuf[2]));
+        RawCur = CANmilliamps;
+        getcurrent();
+        /*if ( settings.cursens == Canbus)
+          {
+            RawCur = CANmilliamps;
+            getcurrent();
+          }*/
         break;
       case 0x522: //
         voltage1 = rxBuf[5] + (rxBuf[4] << 8) + (rxBuf[3] << 16) + (rxBuf[2] << 24);

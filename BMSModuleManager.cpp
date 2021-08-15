@@ -611,22 +611,22 @@ void BMSModuleManager::printPackDetails(int digits)
                   Pstring, getPackVoltage(), getAvgCellVolt(), LowCellVolt, HighCellVolt, (HighCellVolt - LowCellVolt) * 1000, getAvgTemperature());
   Logger::console("");
   HWSERIAL.print("Modules: ");
-  HWSERIAL.println(numFoundModules);
-  HWSERIAL.print("Cells: ");
+  HWSERIAL.print(numFoundModules);
+  HWSERIAL.print(" | Cells: ");
   HWSERIAL.println(seriescells());
-  HWSERIAL.print("Voltage: ");
+  //HWSERIAL.print("Voltage: ");
   HWSERIAL.print(getPackVoltage(), 3); //va_arg( args, double ), 3
   HWSERIAL.println("V");
-  HWSERIAL.print("Avg Cell Voltage: ");
+  //HWSERIAL.print("Avg: ");
   HWSERIAL.print(getAvgCellVolt(), 3);
-  HWSERIAL.println("V");
-  HWSERIAL.print("Low Cell Voltage: ");
+  HWSERIAL.print("V | ");
+  //HWSERIAL.print("Low: ");
   HWSERIAL.print(LowCellVolt, 3);
-  HWSERIAL.println("V");
-  HWSERIAL.print("High Cell Voltage: ");
+  HWSERIAL.print("V - ");
+  //HWSERIAL.print("High: ");
   HWSERIAL.print(HighCellVolt, 3);
-  HWSERIAL.println("V");
-  HWSERIAL.print("Delta Voltage: ");
+  HWSERIAL.print("V | ");
+  //HWSERIAL.print("Delta: ");
   HWSERIAL.print((HighCellVolt - LowCellVolt) * 1000, 0); //va_arg( args, double ), 0
   HWSERIAL.println("mV");
   HWSERIAL.print("Avg Temp: ");
