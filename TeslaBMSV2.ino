@@ -1810,6 +1810,7 @@ void menu()
 {
 
   incomingByte = Serial.read(); // read the incoming byte:
+  if (HWSERIAL.available() > 0) incomingByte = HWSERIAL.read(); // read the incoming byte: *Add this line to be able to read from BT? Bryson
   if (menuload == 4)
   {
     switch (incomingByte)
