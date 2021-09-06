@@ -3566,21 +3566,15 @@ void canread()
     switch (inMsg.id)
     {
       case 0x521: //
-        //CANmilliamps = rxBuf[5] + (rxBuf[4] << 8) + (rxBuf[3] << 16) + (rxBuf[2] << 24);
-        CANmilliamps = ((rxBuf[5] << 24) + (rxBuf[4] << 16) + (rxBuf[3] << 8) + (rxBuf[2]));
+        CANmilliamps = ((inMsg.buf[5] << 24) | (inMsg.buf[4] << 16) | (inMsg.buf[3] << 8) | (inMsg.buf[2]));
         RawCur = CANmilliamps;
         getcurrent();
-        /*if ( settings.cursens == Canbus)
-          {
-            RawCur = CANmilliamps;
-            getcurrent();
-          }*/
         break;
       case 0x522: //
-        voltage1 = rxBuf[5] + (rxBuf[4] << 8) + (rxBuf[3] << 16) + (rxBuf[2] << 24);
+        voltage1 = inMsg.buf[5] + (inMsg.buf[4] << 8) + (inMsg.buf[3] << 16) + (inMsg.buf[2] << 24);
         break;
       case 0x523: //
-        voltage2 = rxBuf[5] + (rxBuf[4] << 8) + (rxBuf[3] << 16) + (rxBuf[2] << 24);
+        voltage2 = inMsg.buf[5] + (inMsg.buf[4] << 8) + (inMsg.buf[3] << 16) + (inMsg.buf[2] << 24);
         break;
       default:
         break;
@@ -3593,34 +3587,32 @@ void canread()
     }
   }
   if (candebug == 1)
-  {
-    int pgn = 0;
-    if ((inMsg.id & 0x10000000) == 0x10000000)    // Determine if ID is standard (11 bits) or extended (29 bits)
     {
-      pgn = pgnFromCANId(inMsg.id);
-      sprintf(msgString, "Extended ID: 0x%.8lX (pgn 0x%.5lX)  DLC: %1d  Data:", (inMsg.id & 0x1FFFFFFF), pgn, inMsg.len);
-    }
-    else
-    {
-      sprintf(msgString, ",0x%.3lX,false,%1d", inMsg.id, inMsg.len);
-    }
-
-    if (pgn == 0x1F214) {
       Serial.print(millis());
+      HWSERIAL.print(millis());
+      if ((inMsg.id & 0x80000000) == 0x80000000)    // Determine if ID is standard (11 bits) or extended (29 bits)
+        sprintf(msgString, "Extended ID: 0x%.8lX  DLC: %1d  Data:", (inMsg.id & 0x1FFFFFFF), inMsg.len);
+      else
+        sprintf(msgString, ",0x%.3lX,false,%1d", inMsg.id, inMsg.len);
+
       Serial.print(msgString);
+      HWSERIAL.print(msgString);
 
       if ((inMsg.id & 0x40000000) == 0x40000000) {  // Determine if message is a remote request frame.
         sprintf(msgString, " REMOTE REQUEST FRAME");
         Serial.print(msgString);
+        HWSERIAL.print(msgString);
       } else {
         for (byte i = 0; i < inMsg.len; i++) {
           sprintf(msgString, ", 0x%.2X", inMsg.buf[i]);
           Serial.print(msgString);
+          HWSERIAL.print(msgString);
         }
       }
+
       Serial.println();
+      HWSERIAL.println();
     }
-  }
 }
 
 void CAB300()
