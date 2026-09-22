@@ -40,7 +40,7 @@ SerialConsole console;
 EEPROMSettings settings;
 
 /////Version Identifier/////////
-int firmver = 200201;
+int firmver = 200205;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -129,6 +129,13 @@ char msgString[128];                        // Array to store serial string
 uint32_t inbox;
 signed long CANmilliamps;//mA
 signed long voltage1, voltage2, voltage3 = 0; //mV only with ISAscale sensor
+
+// ISA / IVT-S-500 power-down handling
+#define ISA_TIMEOUT_MS 250
+#define ISA_IMAX_MA    6900000L   // IVT-S-500 overcurrent range ±6900 A
+unsigned long lastIsaMs = 0;
+bool isaFresh = false;
+bool isaInhibit = false;  // true when IN1 and IN3 are both LOW
 //struct can_frame canMsg;
 //MCP2515 CAN1(10); //set CS pin for can controlelr
 
@@ -710,6 +717,7 @@ void loop()
     {
       getcurrent();
     }
+    updateIsaPowerState();
   }
 
   if (millis() - looptime > 500)
@@ -3546,6 +3554,37 @@ int pgnFromCANId(int canId)
   }
 }
 
+void zeroIsaCurrent()
+{
+  RawCur = 0;
+  currentact = 0;
+  lasttime = millis();
+}
+
+void updateIsaPowerState()
+{
+  if (!(settings.cursens == Canbus && settings.curcan == IsaScale))
+  {
+    return;
+  }
+
+  // Vehicle off and unplugged: IN1 key and IN3 charge-present both inactive
+  bool keyOrCharge = (digitalRead(IN1) == HIGH) || (digitalRead(IN3) == HIGH);
+  isaInhibit = !keyOrCharge;
+
+  if (isaInhibit)
+  {
+    isaFresh = false;
+    zeroIsaCurrent();
+    return;
+  }
+
+  if (!isaFresh || (millis() - lastIsaMs > ISA_TIMEOUT_MS))
+  {
+    zeroIsaCurrent();
+  }
+}
+
 void canread()
 {
   Can0.read(inMsg);
@@ -3565,10 +3604,23 @@ void canread()
   {
     switch (inMsg.id)
     {
-      case 0x521: //
-        CANmilliamps = ((inMsg.buf[5] << 24) | (inMsg.buf[4] << 16) | (inMsg.buf[3] << 8) | (inMsg.buf[2]));
-        RawCur = CANmilliamps;
-        getcurrent();
+      case 0x521: // current, bytes 2-5 big-endian signed mA
+        // Ignore brown-out / key-off frames and short payloads
+        if (isaInhibit) break;
+        if (inMsg.len < 6) break;
+        {
+          int32_t ma = (int32_t)(
+              ((uint32_t)inMsg.buf[5] << 24) |
+              ((uint32_t)inMsg.buf[4] << 16) |
+              ((uint32_t)inMsg.buf[3] <<  8) |
+               (uint32_t)inMsg.buf[2]);
+          if (labs(ma) > ISA_IMAX_MA) break;
+          CANmilliamps = ma;
+          RawCur = CANmilliamps;
+          lastIsaMs = millis();
+          isaFresh = true;
+          getcurrent();
+        }
         break;
       case 0x522: //
         voltage1 = inMsg.buf[5] + (inMsg.buf[4] << 8) + (inMsg.buf[3] << 16) + (inMsg.buf[2] << 24);
