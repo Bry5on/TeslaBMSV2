@@ -1,0 +1,20 @@
+Drive OUT6 (J4 pin 6) to ground as soon as IN1 or IN3 is high.
+Apply these three edits to TeslaBMSV2.ino (firmver 200206).
+
+1) firmver:
+- int firmver = 200205;
++ int firmver = 200206;
+
+2) In setup(), after analogWriteFrequency(OUT8, pwmfreq):
++  analogWrite(OUT6, 0); // ISA unpowered until IN1 or IN3
+
+   and change the OUT6 pinMode comment to:
+   pinMode(OUT6, OUTPUT); // ISA enable (low-side, J4 pin 6)
+
+3) At the very top of loop(), before while (Can0.available()):
++  // ISA enable: IN1 key or IN3 charge → OUT6 FET on (J4 pin 6 to GND)
++  {
++    bool keyOrCharge = (digitalRead(IN1) == HIGH) || (digitalRead(IN3) == HIGH);
++    isaInhibit = !keyOrCharge;
++    analogWrite(OUT6, keyOrCharge ? 255 : 0);
++  }
