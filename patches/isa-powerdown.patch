@@ -5,7 +5,7 @@
  
  /////Version Identifier/////////
 -int firmver = 200201;
-+int firmver = 200203;
++int firmver = 200205;
  
  //Curent filter//
  float filterFrequency = 5.0 ;
@@ -14,9 +14,9 @@
  signed long CANmilliamps;//mA
  signed long voltage1, voltage2, voltage3 = 0; //mV only with ISAscale sensor
 +
-+// ISA / IVT-S power-down handling
++// ISA / IVT-S-500 power-down handling
 +#define ISA_TIMEOUT_MS 250
-+#define ISA_IMAX_MA    1500000L   // reject implausible spikes (1500 A)
++#define ISA_IMAX_MA    6900000L   // IVT-S-500 overcurrent range ±6900 A
 +unsigned long lastIsaMs = 0;
 +bool isaFresh = false;
 +bool isaInhibit = false;  // true when IN1 and IN3 are both LOW
@@ -31,7 +31,7 @@
    }
  
    if (millis() - looptime > 500)
-@@ -3546,6 +3554,40 @@
+@@ -3546,6 +3554,37 @@
    }
  }
  
@@ -40,9 +40,6 @@
 +  RawCur = 0;
 +  currentact = 0;
 +  lasttime = millis();
-+  // Snap the 5 Hz low-pass to zero so it does not hold the last drive current
-+  lowpassFilter.input(0);
-+  lowpassFilter.input(0);
 +}
 +
 +void updateIsaPowerState()
@@ -72,7 +69,7 @@
  void canread()
  {
    Can0.read(inMsg);
-@@ -3565,10 +3607,23 @@
+@@ -3565,10 +3604,23 @@
    {
      switch (inMsg.id)
      {
