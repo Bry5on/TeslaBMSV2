@@ -40,7 +40,7 @@ SerialConsole console;
 EEPROMSettings settings;
 
 /////Version Identifier/////////
-int firmver = 200205;
+int firmver = 200207;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -280,7 +280,7 @@ void setup()
   pinMode(OUT3, OUTPUT); // charge relay
   pinMode(OUT4, OUTPUT); // Negative contactor
   pinMode(OUT5, OUTPUT); // pwm driver output
-  pinMode(OUT6, OUTPUT); // pwm driver output
+  pinMode(OUT6, OUTPUT); // ISA enable (low-side, J4 pin 6)
   pinMode(OUT7, OUTPUT); // pwm driver output
   pinMode(OUT8, OUTPUT); // pwm driver output
   pinMode(led, OUTPUT);
@@ -289,6 +289,7 @@ void setup()
   analogWriteFrequency(OUT6, pwmfreq);
   analogWriteFrequency(OUT7, pwmfreq);
   analogWriteFrequency(OUT8, pwmfreq);
+  analogWrite(OUT6, 0); // ISA unpowered until IN1 or IN3
 
   EEPROM.get(0, settings);
   if (settings.version != EEPROM_VERSION)
@@ -396,6 +397,13 @@ void setup()
 
 void loop()
 {
+  // ISA enable: IN1 key or IN3 charge → OUT6 FET on (J4 pin 6 to GND)
+  {
+    bool keyOrCharge = (digitalRead(IN1) == HIGH) || (digitalRead(IN3) == HIGH);
+    isaInhibit = !keyOrCharge;
+    analogWrite(OUT6, keyOrCharge ? 255 : 0);
+  }
+
   while (Can0.available())
   {
     canread();
@@ -1523,7 +1531,7 @@ void contcon()
     }
     if ((contctrl & 2) == 0)
     {
-      analogWrite(OUT6, 0);
+      // OUT6 reserved for ISA enable — do not drive here
       contstat = contstat & 253;
     }
     if ((contctrl & 4) == 0)
@@ -1553,25 +1561,9 @@ void contcon()
 
     if ((contctrl & 2) == 2)
     {
-      if ((contstat & 2) != 2)
-      {
-        if (conttimer2 == 0)
-        {
-          if (debug != 0)
-          {
-            Serial.println();
-            Serial.println("pull in OUT6");
-          }
-          analogWrite(OUT6, 255);
-          conttimer2 = millis() + pulltime ;
-        }
-        if (conttimer2 < millis())
-        {
-          analogWrite(OUT6, settings.conthold);
-          contstat = contstat | 2;
-          conttimer2 = 0;
-        }
-      }
+      // OUT6 reserved for ISA enable — skip economizer PWM
+      contstat = contstat | 2;
+      conttimer2 = 0;
     }
     if ((contctrl & 4) == 4)
     {
@@ -1608,7 +1600,7 @@ void contcon()
   if (contctrl == 0)
   {
     analogWrite(OUT5, 0);
-    analogWrite(OUT6, 0);
+    // OUT6 reserved for ISA enable
   }
 }
 
@@ -3900,7 +3892,7 @@ void outputdebug()
     digitalWrite(OUT3, HIGH);
     digitalWrite(OUT4, HIGH);
     analogWrite(OUT5, 255);
-    analogWrite(OUT6, 255);
+    // OUT6 reserved for ISA enable
     analogWrite(OUT7, 255);
     analogWrite(OUT8, 255);
     outputstate ++;
@@ -3912,7 +3904,7 @@ void outputdebug()
     digitalWrite(OUT3, LOW);
     digitalWrite(OUT4, LOW);
     analogWrite(OUT5, 0);
-    analogWrite(OUT6, 0);
+    // OUT6 reserved for ISA enable
     analogWrite(OUT7, 0);
     analogWrite(OUT8, 0);
     outputstate ++;
