@@ -3571,10 +3571,7 @@ void updateIsaPowerState()
     return;
   }
 
-  if (!isaFresh || (millis() - lastIsaMs > ISA_TIMEOUT_MS))
-  {
-    zeroIsaCurrent();
-  }
+  // key-on: hold last ISA current through dropped 0x521 frames
 }
 
 void canread()
