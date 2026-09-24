@@ -813,7 +813,8 @@ void loop()
   }
   if (millis() - cleartime > 5000)
   {
-    bms.clearmodules();
+    // Do not zero module voltages here. A failed serial poll after
+    // clearmodules() made pack V and series-cell count collapse.
     cleartime = millis();
   }
   if (millis() - looptime1 > settings.chargerspd)

@@ -166,10 +166,15 @@ bool BMSModule::readModuleValues()
 
   payload[1] = REG_GPAI; //start reading registers at the module voltage registers
   payload[2] = 0x12; //read 18 bytes (Each value takes 2 - ModuleV, CellV1-6, Temp1, Temp2)
-  retLen = BMSUtil::sendDataWithReply(payload, 3, false, buff, 22);
-
-  calcCRC = BMSUtil::genCRC(buff, retLen - 1);
-  Logger::debug("Sent CRC: %x     Calculated CRC: %x", buff[21], calcCRC);
+  for (int attempt = 0; attempt < 3; attempt++)
+  {
+    retLen = BMSUtil::sendDataWithReply(payload, 3, false, buff, 22);
+    calcCRC = BMSUtil::genCRC(buff, retLen > 0 ? retLen - 1 : 0);
+    Logger::debug("Sent CRC: %x     Calculated CRC: %x", buff[21], calcCRC);
+    if ( (retLen == 22) && (buff[21] == calcCRC) )
+      break;
+    delay(5);
+  }
 
   //18 data bytes, address, command, length, and CRC = 22 bytes returned
   //Also validate CRC to ensure we didn't get garbage data.
@@ -264,6 +269,7 @@ float BMSModule::getAverageV()
   }
 
   scells = x;
+  if (x == 0) return avgVal;
   avgVal /= x;
   return avgVal;
 }
