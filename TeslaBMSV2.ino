@@ -131,7 +131,7 @@ signed long CANmilliamps;//mA
 signed long voltage1, voltage2, voltage3 = 0; //mV only with ISAscale sensor
 
 // ISA / IVT-S-500 power-down handling
-#define ISA_TIMEOUT_MS 250
+#define ISA_TIMEOUT_MS 2000
 #define ISA_IMAX_MA    6900000L   // IVT-S-500 overcurrent range ±6900 A
 unsigned long lastIsaMs = 0;
 bool isaFresh = false;
@@ -3552,6 +3552,7 @@ void zeroIsaCurrent()
   RawCur = 0;
   currentact = 0;
   lasttime = millis();
+  lowpassFilter.input(0);
 }
 
 void updateIsaPowerState()
@@ -3572,7 +3573,13 @@ void updateIsaPowerState()
     return;
   }
 
-  // key-on: hold last ISA current through dropped 0x521 frames
+  // Key-on: if 0x521 has been missing, drop current and lasttime so the
+  // next frame does not integrate currentact * (multi-second gap).
+  if (!isaFresh || (millis() - lastIsaMs > ISA_TIMEOUT_MS))
+  {
+    isaFresh = false;
+    zeroIsaCurrent();
+  }
 }
 
 void canread()
