@@ -784,6 +784,7 @@ void loop()
     updateSOC();
     currentlimit();
     VEcan();
+    sendOpenInverterSOC();
 
 
     if (cellspresent == 0 && SOCset == 1)
@@ -4252,4 +4253,42 @@ void SerialCanRecieve()
     }
     Serial.println();
   }
+}
+
+
+// Publish SOC + charge limits for openinverter Tesla Gen2/Gen3 V5 charger
+// CAN ID 0x102:
+//   bits  8-23 : udclim  (16-bit V) = 416
+//   bits 24-31 : idcspnt (8-bit A)  = 45
+//   bit  40    : canenable          = 1
+//   bits 48-55 : soc     (8-bit %)
+// Unused bytes (0, 4, 7 and bits 41-47) are not mapped in the charger firmware.
+void sendOpenInverterSOC()
+{
+  msg.id  = 0x102;
+  msg.len = 8;
+
+  // Defaults matching current charger settings (cancontrol=Off)
+  const uint16_t udclim_V  = 416;
+  const uint8_t  idcspnt_A = 45;
+  const uint8_t  canenable = 1;
+
+  // Zero the frame
+  for (int i = 0; i < 8; i++) msg.buf[i] = 0;
+
+  // udclim @ bit 8, 16 bits (little-endian)
+  msg.buf[1] = udclim_V & 0xFF;
+  msg.buf[2] = (udclim_V >> 8) & 0xFF;
+
+  // idcspnt @ bit 24, 8 bits
+  msg.buf[3] = idcspnt_A;
+
+  // canenable @ bit 40 (byte 5, bit 0)
+  msg.buf[5] = canenable;
+
+  // SOC @ bit 48, 8 bits (byte 6)
+  uint8_t soc8 = (uint8_t)constrain(SOC, 0, 100);
+  msg.buf[6] = soc8;
+
+  Can0.write(msg);
 }
